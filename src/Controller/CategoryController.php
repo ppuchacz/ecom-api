@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\Entity\Product;
+use App\Entity\Category;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -13,8 +13,8 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\SerializerInterface;
 
-#[Route('/product', name: 'app_product_')]
-class ProductController extends AbstractController
+#[Route('/category', name: 'app_category_')]
+class CategoryController extends AbstractController
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
@@ -33,8 +33,8 @@ class ProductController extends AbstractController
         }
 
         $offset = ($page - 1) * $limit;
-        $products = $this->entityManager->getRepository(Product::class)->findBy([], null, $limit, $offset);
-        $json = $this->serializer->serialize($products, JsonEncoder::FORMAT);
+        $categories = $this->entityManager->getRepository(Category::class)->findBy([], null, $limit, $offset);
+        $json = $this->serializer->serialize($categories, JsonEncoder::FORMAT);
 
         return JsonResponse::fromJsonString($json);
     }
@@ -43,8 +43,8 @@ class ProductController extends AbstractController
     public function add(Request $request): Response
     {
         $json = $request->getContent();
-        $product = $this->serializer->deserialize($json, Product::class, 'json');
-        $this->entityManager->persist($product);
+        $category = $this->serializer->deserialize($json, Category::class, 'json');
+        $this->entityManager->persist($category);
 
         $this->entityManager->flush();
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
@@ -53,22 +53,17 @@ class ProductController extends AbstractController
     #[Route('/{id}', name: 'edit', methods: [Request::METHOD_PUT])]
     public function edit(Request $request, int $id): Response
     {
-        $productInDB = $this->entityManager->getRepository(Product::class)->findOneBy(['id' => $id]);
-        if ($productInDB === null) {
-            return new Response("Product with id $id not found", Response::HTTP_NOT_FOUND);
+        $categoryInDB = $this->entityManager->getRepository(Category::class)->findOneBy(['id' => $id]);
+        if ($categoryInDB === null) {
+            return new Response("Category with id $id not found", Response::HTTP_NOT_FOUND);
         }
 
         $json = $request->getContent();
-        $product = $this->serializer->deserialize($json, Product::class, 'json');
+        $category = $this->serializer->deserialize($json, Category::class, 'json');
 
-        $productInDB->name = $product->name;
-        $productInDB->description = $product->description;
-        $productInDB->price = $product->price;
-        $productInDB->brand = $product->brand;
-        $productInDB->max_quantity = $product->max_quantity;
-        $productInDB->picture = $product->picture;
+        $categoryInDB->name = $category->name;
 
-        $this->entityManager->persist($product);
+        $this->entityManager->persist($category);
         $this->entityManager->flush();
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
@@ -76,12 +71,12 @@ class ProductController extends AbstractController
     #[Route('/{id}', name: 'delete', methods: [Request::METHOD_DELETE])]
     public function delete(Request $request, int $id): Response
     {
-        $product = $this->entityManager->getRepository(Product::class)->findOneBy(['id' => $id]);
-        if ($product === null) {
-            return new Response("Product with id $id not found", Response::HTTP_NOT_FOUND);
+        $category = $this->entityManager->getRepository(Category::class)->findOneBy(['id' => $id]);
+        if ($category === null) {
+            return new Response("Category with id $id not found", Response::HTTP_NOT_FOUND);
         }
 
-        $this->entityManager->remove($product);
+        $this->entityManager->remove($category);
         $this->entityManager->flush();
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
